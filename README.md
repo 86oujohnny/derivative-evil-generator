@@ -30,10 +30,10 @@
    - Folder：`/ (root)`
 5. 儲存並等待部署完成。
 
-網站網址通常會是：
+網址：
 
 ```text
-https://YOUR-USERNAME.github.io/derivative-evil-generator/
+https://86oujohnny.github.io/derivative-evil-generator/
 ```
 
 ## 專案結構
