@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="可重現、附完整詳解與陷阱提示的微分作業產生器，涵蓋 implicit、parametric、higher derivatives 與 Boss 題。">
+  <meta name="theme-color" content="#9d1724">
+  <meta property="og:title" content="微分作業產生器：邪惡版">
+  <meta property="og:description" content="短算式、深陷阱、完整詳解。Evil but fair.">
+  <meta property="og:type" content="website">
+  <title>微分作業產生器：邪惡版</title>
+  <script>
+    window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root{--ink:#171717;--muted:#666;--paper:#fffdf7;--red:#9d1724;--gold:#efc75e;--line:#ded8ca}
+    *{box-sizing:border-box} body{margin:0;background:#efece4;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif}
+    header{background:#181818;color:white;padding:28px 20px;border-bottom:7px solid var(--red)}
+    header h1{max-width:1050px;margin:0 auto 5px;font-family:Georgia,serif;font-size:clamp(26px,5vw,45px)}
+    header p{max-width:1050px;margin:0 auto;color:#ddd}.wrap{max-width:1050px;margin:22px auto;padding:0 16px 50px}
+    .panel,.sheet{background:var(--paper);border:1px solid var(--line);box-shadow:0 8px 28px #00000012;border-radius:12px}
+    .panel{padding:18px;display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:14px;align-items:end}
+    label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}select,input{width:100%;padding:10px;border:1px solid #bbb;border-radius:7px;background:white;font-size:15px}
+    .buttons{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:9px}.btn{border:0;border-radius:8px;padding:10px 15px;font-weight:800;cursor:pointer;background:#252525;color:white}.btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:var(--red)}.btn.alt{background:#e4dfd1;color:#222}.notice{grid-column:1/-1;color:var(--muted);font-size:13px}
+    .sheet{margin-top:18px;padding:30px 38px}.title{text-align:center;border-bottom:2px solid #222;padding-bottom:17px;margin-bottom:20px}.title h2{margin:0;font-family:Georgia,serif;font-size:28px}.meta{margin-top:8px;color:#555;font-size:13px}
+    .instructions{background:#f2eee3;border-left:5px solid var(--gold);padding:11px 14px;margin:15px 0 24px;font-size:14px}
+    .problem{padding:18px 0;border-bottom:1px dashed #bbb;break-inside:avoid}.problem:last-child{border:0}.qhead{display:flex;justify-content:space-between;gap:8px;align-items:center}.qnum{font-weight:900;color:var(--red)}.badge{font-size:12px;background:#222;color:white;padding:3px 8px;border-radius:99px}
+    .expr{font-family:Georgia,"Times New Roman",serif;font-size:21px;background:white;border:1px solid #ddd;border-radius:8px;padding:18px;margin:10px 0;overflow-x:auto;text-align:center}.prompt{font-size:14px;color:#444}
+    .math-line{overflow-x:auto;padding:2px 0}.steps mjx-container{font-size:108%!important}.expr mjx-container{margin:0!important}
+    .solution{display:none;background:#f4f7f2;border:1px solid #cbd9c7;border-radius:9px;padding:15px;margin-top:12px}.solution.show{display:block}.solution h4{margin:0 0 9px;color:#285b30}.steps{margin:0;padding-left:21px}.steps li{margin:7px 0}.domain{color:#784b00;font-size:13px;margin-top:9px}.footer{text-align:center;color:#777;margin-top:22px;font-size:12px}
+    code{font-family:"SFMono-Regular",Consolas,monospace}.empty{text-align:center;padding:50px;color:#777}
+    @media(max-width:760px){.panel{grid-template-columns:1fr 1fr}.sheet{padding:22px 18px}}
+    @media print{body{background:white}header,.panel,.screen-only{display:none!important}.wrap{max-width:none;margin:0;padding:0}.sheet{box-shadow:none;border:0;margin:0;padding:0}.solution{display:block!important;background:white;border:0;border-left:3px solid #aaa}.problem{page-break-inside:avoid}.title{margin-top:0}}
+  </style>
+</head>
+<body>
+<header><h1>微分作業產生器：邪惡版</h1><p>短算式、深陷阱、完整詳解。學生看完答案才知道自己在哪一層被攻擊。</p></header>
+<main class="wrap">
+  <section class="panel screen-only">
+    <div><label for="count">題數</label><input id="count" type="number" min="1" max="20" value="20"></div>
+    <div><label for="evil">邪惡度</label><select id="evil"><option value="1">1 — 尚有良知</option><option value="2">2 — 開始可疑</option><option value="3" selected>3 — TA被記住</option><option value="4">4 — PI需要介入</option><option value="5">5 — Reviewer 2</option></select></div>
+    <div><label for="mode">攻擊模式</label><select id="mode"><option value="mixed">完整配額組卷</option><option value="implicit">Implicit 地獄</option><option value="parametric">Parametric 陷阱</option><option value="higher">Higher derivatives</option><option value="boss">Boss rush</option></select></div>
+    <div><label for="seed">Seed（重現同份作業）</label><input id="seed" value="20260922"></div>
+    <div class="buttons">
+      <button class="btn primary" id="generate">重新產生</button>
+      <button class="btn" id="toggle">顯示全部詳解</button>
+      <button class="btn alt" id="copy">複製純文字</button>
+      <button class="btn alt" onclick="window.print()">列印／存 PDF</button>
+    </div>
+    <div class="notice">20 題＋完整配額組卷會依指定比例涵蓋全部題型；少於 20 題或單項模式則按題型輪替。高邪惡度只增加結構與判斷，不以冗長運算冒充困難。</div>
+  </section>
+  <section class="sheet" id="sheet"><div class="empty">按「重新產生」開始合法攻擊。</div></section>
+</main>
+<script>
+if(false)(() => {
+  const $=s=>document.querySelector(s); let current=[], showing=false;
+  function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+  function rng(seed){let a=hash(seed);return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  const pick=(r,a)=>a[Math.floor(r()*a.length)];
+  const M=t=>`%%${t}%%`;
+  const leaf=r=>pick(r,[{s:'x',t:'x',d:'1',dt:'1'},{s:'2*x',t:'2x',d:'2',dt:'2'},{s:'3*x',t:'3x',d:'3',dt:'3'},{s:'x^2',t:'x^2',d:'2*x',dt:'2x'},{s:'ln(x)',t:'\\ln x',d:'1/x',dt:'\\frac{1}{x}'}]);
+  function applyFn(f,a){const factor={sin:{s:`cos(${a.s})`,t:`\\cos\\left(${a.t}\\right)`},cos:{s:`-sin(${a.s})`,t:`-\\sin\\left(${a.t}\\right)`},tan:{s:`sec(${a.s})^2`,t:`\\sec^2\\left(${a.t}\\right)`},ln:{s:`1/(${a.s})`,t:`\\frac{1}{${a.t}}`},exp:{s:`exp(${a.s})`,t:`e^{${a.t}}`}}[f];const ft={sin:'\\sin',cos:'\\cos',tan:'\\tan',ln:'\\ln',exp:'\\exp'}[f];return{s:`${f}(${a.s})`,t:f==='exp'?`e^{${a.t}}`:`${ft}\\left(${a.t}\\right)`,d:`${factor.s} * (${a.d})`,dt:`${factor.t}\\,\\left(${a.dt}\\right)`}}
+  const inner=(r,l)=>{let e=leaf(r);const fs=['sin','cos','tan','ln','exp'];for(let i=0;i<l;i++)e=applyFn(pick(r,fs),e);return e};
+  function chainQ(r,e){const depth=Math.max(1,e),core=inner(r,depth),outer=pick(r,['sin','cos','tan','exp','ln']),ans=applyFn(outer,core);return {expr:ans.s,tex:ans.t,type:'Chain rule',domain:'需避開 ln、tan 等內層函數未定義之處。',steps:[
+    `令 ${M(`u=${core.t}`)}。先把最外層視為 ${M(outer==='exp'?'e^u':`\\${outer}(u)`)}。`,
+    `由外向內逐層微分；每經過一層函數，就乘上該層內部的導數。`,
+    `內層導數為 ${M(`\\frac{d}{dx}\\left[${core.t}\\right]=${core.dt}`)}。`,
+    `所以 ${M(`y'=${ans.dt}`)}。答案保留乘積結構即可。`
+  ]}}
+  function logQ(r,e){const base=pick(r,[{s:'x',t:'x',d:'1',dt:'1'},{s:'tan(x)',t:'\\tan x',d:'sec(x)^2',dt:'\\sec^2x'},{s:'1+x^2',t:'1+x^2',d:'2*x',dt:'2x'},{s:'exp(sin(x))',t:'e^{\\sin x}',d:'exp(sin(x))*cos(x)',dt:'e^{\\sin x}\\cos x'},{s:'ln(x)+2',t:'\\ln x+2',d:'1/x',dt:'\\frac1x'}]);const pow=pick(r,e>3?[{s:'sin(x)',t:'\\sin x',d:'cos(x)',dt:'\\cos x'},{s:'x^x',t:'x^x',d:'x^x*(ln(x)+1)',dt:'x^x(\\ln x+1)'},{s:'exp(x)',t:'e^x',d:'exp(x)',dt:'e^x'},{s:'x*(ln(x))^2',t:'x(\\ln x)^2',d:'(ln(x))^2+2*ln(x)',dt:'(\\ln x)^2+2\\ln x'}]:[{s:'sin(x)',t:'\\sin x',d:'cos(x)',dt:'\\cos x'},{s:'x^2',t:'x^2',d:'2*x',dt:'2x'},{s:'ln(x)+1',t:'\\ln x+1',d:'1/x',dt:'\\frac1x'}]);const ex=`(${base.s})^(${pow.s})`,exT=`\\left(${base.t}\\right)^{${pow.t}}`;const ans=`${ex} * [(${pow.d})*ln(${base.s}) + (${pow.s})*(${base.d})/(${base.s})]`,ansT=`${exT}\\left[(${pow.dt})\\ln(${base.t})+(${pow.t})\\frac{${base.dt}}{${base.t}}\\right]`;return {expr:ex,tex:exT,type:'Log differentiation',domain:`實數範圍使用對數微分時需 ${base.s} > 0，並同時滿足所有內層函數的定義域。`,steps:[
+    `令 ${M(`y=${exT}`)}，取對數得 ${M(`\\ln y=(${pow.t})\\ln(${base.t})`)}。`,
+    `底數導數為 ${M(`\\frac d{dx}[${base.t}]=${base.dt}`)}；指數導數為 ${M(`\\frac d{dx}[${pow.t}]=${pow.dt}`)}。`,
+    `兩側微分：${M(`\\frac{y'}y=(${pow.dt})\\ln(${base.t})+(${pow.t})\\frac{${base.dt}}{${base.t}}`)}。`,
+    `所以 ${M(`y'=${ansT}`)}。`
+  ]}}
+  function elegantQ(r){return pick(r,[
+    {expr:'T_1(x)=x, T_(n+1)(x)=x^(T_n(x)). 求 T_2026\'(1)。',tex:'T_1(x)=x,\\quad T_{n+1}(x)=x^{T_n(x)}.\\quad \\text{求 }T_{2026}\'(1)',type:'Recursion / invariant',domain:'x>0。',steps:[`先由對數微分得 ${M("T_{n+1}'=T_{n+1}\\left(T_n'\\ln x+\\frac{T_n}{x}\\right)")}。`,`對所有 ${M('n')}，${M('T_n(1)=1')}。`,`代入 ${M('x=1')}：${M("T_{n+1}'(1)=1[T_n'(1)\\cdot0+1]=1")}。`,`所以 ${M("T_{2026}'(1)=1")}。巨大層數只是心理攻擊。`]},
+    {expr:'y=(x^2)*(x^3)*x。先化簡，再微分。',tex:'y=x^2\\cdot x^3\\cdot x.\\quad \\text{先化簡，再微分}',type:'Simplify before differentiating',domain:'所有實數 x。',steps:[`先使用同底數相乘：${M('x^2x^3x=x^{2+3+1}=x^6')}。`,`因此 ${M("y'=6x^5")}。`,'若先使用三次 product rule，雖可得到同答案，但屬自願受苦。']},
+    {expr:'若 f(x)+f(-x)=0 且 f 可微，證明 f\'(x)=f\'(-x)。',tex:"f(x)+f(-x)=0,\\quad \\text{證明 }f'(x)=f'(-x)",type:'Symmetry',domain:'f 在相關區間可微。',steps:['原式表示 f 為 odd function。',`對 ${M('x')} 微分：${M("f'(x)-f'(-x)=0")}；第二項的負號來自 chain rule。`,`所以 ${M("f'(x)=f'(-x)")}，即 odd function 的導數為 even function。`]},
+    {expr:'E\'(D)=alpha+2*beta*D/(1+k*D), E(0)=0。求 E(D)，並求 k→0 的極限。',tex:"E'(D)=\\alpha+\\frac{2\\beta D}{1+kD},\\quad E(0)=0.\\quad \\text{求 }E(D)\\text{ 與 }k\\to0\\text{ 的極限}",type:'Model modification',domain:'k>0，且 1+kD>0。',steps:[`積分 ${M('E(D)=\\int_0^D\\left(\\alpha+\\frac{2\\beta u}{1+ku}\\right)du')}。`,`使用 ${M('\\frac{u}{1+ku}=\\frac1k-\\frac1{k(1+ku)}')}。`,`得到 ${M('E(D)=\\alpha D+\\frac{2\\beta}{k^2}[kD-\\ln(1+kD)]')}。`,`由 ${M('\\ln(1+kD)=kD-\\frac{(kD)^2}{2}+O(k^3)')}，極限為 ${M('\\alpha D+\\beta D^2')}。`]}
+  ])}
+  function mixedQ(r,e,i){if(i%4===3&&e>=2)return elegantQ(r);return pick(r,[()=>chainQ(r,e),()=>logQ(r,e),()=>productQ(r,e)])()}
+  function productQ(r,e){const a=inner(r,Math.max(1,e-1)),b=inner(r,Math.max(1,e-2)),quotient=r()>.55,ex=quotient?`(${a.s}) / (${b.s})`:`(${a.s}) * (${b.s})`,exT=quotient?`\\frac{${a.t}}{${b.t}}`:`\\left(${a.t}\\right)\\left(${b.t}\\right)`;return{expr:ex,tex:exT,type:quotient?'Quotient + chain':'Product + chain',domain:'所有組成函數均須有定義；分母不得為 0。',steps:quotient?[
+    `令 ${M(`u=${a.t},\\ v=${b.t}`)}；則 ${M(`u'=${a.dt},\\ v'=${b.dt}`)}。`, `使用 quotient rule：${M("y'=\\frac{u'v-uv'}{v^2}")}。`,`所以 ${M(`y'=\\frac{(${a.dt})(${b.t})-(${a.t})(${b.dt})}{(${b.t})^2}`)}。`
+  ]:[`令 ${M(`u=${a.t},\\ v=${b.t}`)}；則 ${M(`u'=${a.dt},\\ v'=${b.dt}`)}。`,`使用 product rule：${M("y'=u'v+uv'")}。`,`所以 ${M(`y'=(${a.dt})(${b.t})+(${a.t})(${b.dt})`)}。`]}}
+  function generate(){const n=Math.max(1,Math.min(20,+$('#count').value||6)),e=+$('#evil').value,mode=$('#mode').value,r=rng($('#seed').value);current=[];for(let i=0;i<n;i++){let q;if(mode==='chain')q=chainQ(r,e);else if(mode==='log')q=logQ(r,e);else if(mode==='elegant')q=elegantQ(r);else q=mixedQ(r,e,i);current.push(q)}render()}
+  function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+  function rich(s){return esc(s).replace(/%%(.*?)%%/g,(_,tex)=>`<span class="math-line">\\(${tex}\\)</span>`)}
+  function typeset(){if(window.MathJax?.typesetPromise)MathJax.typesetPromise([$('#sheet')]).catch(()=>{})}
+  function render(){const seed=esc($('#seed').value),evil=$('#evil').value;$('#sheet').innerHTML=`<div class="title"><h2>微分作業：邪惡版</h2><div class="meta">Seed ${seed} ・ 邪惡度 ${evil} ・ 姓名：________________</div></div><div class="instructions"><b>規則：</b>可先化簡。必須標示中間變數、定義域與使用的微分法則。答案若只是巨大展開式而無結構，可能被扣可讀性分數。</div>`+current.map((q,i)=>`<article class="problem"><div class="qhead"><span class="qnum">第 ${i+1} 題</span><span class="badge">${esc(q.type)}</span></div><div class="prompt">求導數；若題目另有要求，請一併證明。</div><div class="expr">\\[${q.tex}\\]</div><button class="btn alt screen-only" onclick="this.nextElementSibling.classList.toggle('show')">查看這一題如何攻擊你</button><div class="solution ${showing?'show':''}"><h4>詳解與攻擊路徑</h4><ol class="steps">${q.steps.map(s=>`<li>${rich(s)}</li>`).join('')}</ol><div class="domain"><b>Domain／陷阱：</b>${esc(q.domain)}</div></div></article>`).join('')+`<div class="footer">Generated by 微分作業產生器：邪惡版 ・ 題目可以狠，定義不能含糊。</div>`;typeset()}
+  function toggle(){showing=!showing;$('#toggle').textContent=showing?'隱藏全部詳解':'顯示全部詳解';render()}
+  function plain(){return ['微分作業：邪惡版',`Seed: ${$('#seed').value}`,'',...current.flatMap((q,i)=>[`${i+1}. [${q.type}] ${q.expr}`,'詳解:',...q.steps.map((s,j)=>`  ${j+1}) ${s}`),`Domain: ${q.domain}`,''])].join('\n')}
+  async function copy(){try{await navigator.clipboard.writeText(plain());$('#copy').textContent='已複製';setTimeout(()=>$('#copy').textContent='複製純文字',1200)}catch{alert('瀏覽器不允許自動複製，請用列印功能存成 PDF。')}}
+  $('#generate').addEventListener('click',generate);$('#toggle').addEventListener('click',toggle);$('#copy').addEventListener('click',copy);generate();
+})();
+</script>
+<script>
+(() => {
+  const $=s=>document.querySelector(s), M=t=>`%%${t}%%`;
+  let current=[],showing=false;
+  function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+  function rng(seed){let a=hash(seed);return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  const pick=(r,a)=>a[Math.floor(r()*a.length)], esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const Q=(type,tex,plain,prompt,steps,domain,trap,topics=[])=>({type,tex,plain,prompt,steps,domain,trap,topics});
+  const c=(r,e)=>pick(r,e<3?[2,3,4]:[3,5,7]);
+
+  function sumQ(r,e,k){
+    if((k+e)%2===0){const a=c(r,e);return Q('Sum / difference',`f(x)=x^{${e+2}}-${a}e^x+\\ln x+\\sin x`,`f(x)=x^${e+2}-${a}exp(x)+ln(x)+sin(x)`,'求一階導數。',[`逐項微分：${M(`f'(x)=${e+2}x^{${e+1}}-${a}e^x+\\frac1x+\\cos x`)}。`],'x>0。','不要把和差法則想得太複雜；但 ln x 的定義域不能消失。',['sum_difference']);}
+    return Q('Sum / difference',`g(x)=\\sqrt{x}+\\frac1{x^{${e+1}}}-\\cos x`,`g(x)=sqrt(x)+x^(-${e+1})-cos(x)`,'求一階導數。',[`先寫成冪次：${M(`g(x)=x^{1/2}+x^{-${e+1}}-\\cos x`)}。`,`因此 ${M(`g'(x)=\\frac1{2\\sqrt{x}}-${e+1}x^{-${e+2}}+\\sin x`)}。`],'x>0。','負指數與 -cos x 的符號是兩個獨立小陷阱。',['sum_difference','power']);
+  }
+  function productQ(r,e,k){
+    if(k%2===0){const n=e+1;return Q('Product rule',`f(x)=x^{${n}}e^{${e>2?'2x':'x'}}`,`f(x)=x^${n} exp(${e>2?'2x':'x'})`,'求一階導數，保留因式分解形式。',[`令 ${M(`u=x^{${n}},\\ v=e^{${e>2?'2x':'x'}}`)}。`,`套用 ${M("(uv)'=u'v+uv'")}，得到 ${M(`f'(x)=e^{${e>2?'2x':'x'}}\\left(${n}x^{${n-1}}+${e>2?2:1}x^{${n}}\\right)`)}。`],'所有實數。','先提出共同因子，比完全展開更容易檢查。',['product','exponential']);}
+    return Q('Product rule',`f(x)=\\ln x\\,\\sin(x^{${e>2?2:1}})`,`f(x)=ln(x) sin(x^${e>2?2:1})`,'求一階導數。',[`兩因子都依賴 x；使用 product rule。`,`得到 ${M(`f'(x)=\\frac{\\sin(x^{${e>2?2:1}})}x+\\ln x\\,\\cos(x^{${e>2?2:1}})${e>2?`${2}x`:''}`)}。`],'x>0。','第二項同時需要 product rule 與 chain rule。',['product','chain']);
+  }
+  function quotientQ(r,e,k){
+    if(k%2===0)return Q('Quotient rule',`f(x)=\\frac{x^{${e+1}}+1}{e^x}`,`f(x)=(x^${e+1}+1)/exp(x)`,'求一階導數並化簡。',[`使用 quotient rule，再提出 ${M('e^x')}。`,`所以 ${M(`f'(x)=e^{-x}\\left(${e+1}x^{${e}}-x^{${e+1}}-1\\right)`)}。`],'所有實數。','分母微分後的整項必須被減掉。',['quotient','exponential']);
+    return Q('Quotient rule',`g(x)=\\frac{\\sin x}{x^{${e}}}`,`g(x)=sin(x)/x^${e}`,'求一階導數。',[`由 quotient rule，${M(`g'(x)=\\frac{x^{${e}}\\cos x-${e}x^{${e-1}}\\sin x}{x^{${2*e}}}`)}。`,`在 ${M('x\\ne0')} 下可化為 ${M(`g'(x)=\\frac{x\\cos x-${e}\\sin x}{x^{${e+1}}}`)}。`],'x≠0。','化簡時約去的 x 在 x=0 本來就不屬於定義域。',['quotient','trigonometric']);
+  }
+  function mixedQ(r,e,k){
+    const forms=[
+      Q('Product + quotient + chain',`f(x)=\\frac{e^{\\sin x}\\ln(1+x^2)}{x+${e}}`,`f(x)=exp(sin x) ln(1+x^2)/(x+${e})`,'求一階導數；保留可讀的因式分解。',[`先把分子視為乘積，最後使用 quotient rule。`,`令 ${M('N=e^{\\sin x}\\ln(1+x^2)')}，則 ${M("N'=e^{\\sin x}\\left[\\cos x\\ln(1+x^2)+\\frac{2x}{1+x^2}\\right]")}。`,`因此 ${M(`f'=\\frac{N'(x+${e})-N}{(x+${e})^2}`)}。`],`x≠-${e}。`,'不要在展開式中遺失分子的 product rule。',['product','quotient','chain']),
+      Q('Product + chain',`f(x)=x^{${e}}\\left[\\ln(1+x^2)\\right]^{${e+1}}`,`f(x)=x^${e}[ln(1+x^2)]^${e+1}`,'求一階導數並提出共同因子。',[`product rule 與兩層 chain rule 同時使用。`,`答案為 ${M(`f'=x^{${e-1}}[\\ln(1+x^2)]^{${e}}\\left(${e}\\ln(1+x^2)+\\frac{${2*(e+1)}x^2}{1+x^2}\\right)`)}。`],'所有實數；ln(1+x²) 有定義。','提出共同因子會讓答案從怪物恢復成人形。',['product','chain','logarithmic']),
+      Q('Quotient + chain',`f(x)=\\frac{\\tan(\\ln x)}{1+x^2}`,`f(x)=tan(ln x)/(1+x^2)`,'求一階導數。',[`分子導數為 ${M("\\sec^2(\\ln x)\\cdot\\frac1x")}。`,`所以 ${M("f'=\\frac{(1+x^2)\\sec^2(\\ln x)/x-2x\\tan(\\ln x)}{(1+x^2)^2}")}。`],'x>0，且 cos(ln x)≠0。','chain rule 的 1/x 很容易蒸發。',['quotient','chain'])];return forms[k%forms.length];
+  }
+  function logDiffQ(r,e,k){
+    if(k%2===0)return Q('Logarithmic differentiation',`y=(x^2+${e})^{\\sin x}`,`y=(x^2+${e})^(sin x)`,'用對數微分求 y′。',[`取對數：${M('\\ln y=\\sin x\\,\\ln(x^2+'+e+')')}。`,`微分得 ${M("\\frac{y'}y=\\cos x\\ln(x^2+"+e+")+\\sin x\\frac{2x}{x^2+"+e+'}')}。`,`所以 ${M("y'=(x^2+"+e+")^{\\sin x}\\left[\\cos x\\ln(x^2+"+e+")+\\frac{2x\\sin x}{x^2+"+e+'}\\right]')}。`],'所有實數；底數 x²+e>0。','指數與底數都在變，不能只微分其中一個。',['logarithmic_differentiation']);
+    return Q('Logarithmic differentiation',`y=x^{x^{${e}}}`,`y=x^(x^${e})`,'用對數微分求 y′。',[`在 ${M('x>0')} 上取對數：${M('\\ln y=x^{'+e+'}\\ln x')}。`,`所以 ${M("y'=x^{x^"+e+"}x^{"+(e-1)+"}("+e+"\\ln x+1)")}。`],'實數對數微分採 x>0。','巨大外觀只有一次 product rule。',['logarithmic_differentiation','power']);
+  }
+  function implicitQ(r,e,k){
+    const v=k===11?2:k%4;
+    if(v===0)return Q('Implicit differentiation',`x^2+xy+y^2=${3+e}`,`x^2+xy+y^2=${3+e}`,'求 dy/dx，並指出何時不能由此式局部解成 y=f(x)。',[`逐項微分：${M("2x+(xy'+y)+2yy'=0")}。`,`收集 ${M("y'")}：${M("(x+2y)y'=-(2x+y)")}。`,`因此 ${M("y'=-\\frac{2x+y}{x+2y}")}。`],`曲線上的點；公式另要求 x+2y≠0。`,'若 x+2y=0，implicit function theorem 對 y 的條件失效；不能硬套公式。',['implicit_differentiation']);
+    if(v===1)return Q('Implicit slope at a point',`e^{xy}+x+y=2`,`exp(xy)+x+y=2`,'求曲線在 (1,0) 的切線斜率。',[`先確認 ${M('(1,0)')} 在曲線上：${M('e^0+1+0=2')}。`,`微分：${M("e^{xy}(xy'+y)+1+y'=0")}。`,`代入 ${M('(1,0)')} 得 ${M("y'=-\\frac12")}。`],'曲線上且 e^{xy}x+1≠0。','指定點必須先代回原式；d/dx(e^{xy}) 的內層是 xy′+y。',['implicit_differentiation','special_point']);
+    if(v===2)return Q('Second implicit derivative',`x^2+y^2=${e+3}`,`x^2+y^2=${e+3}`,'求 y′ 與 y″，並保留 y=y(x)。',[`一次微分：${M("2x+2yy'=0\\Rightarrow y'=-x/y")}。`,`再次微分：${M("2+2[(y')^2+yy'']=0")}。`,`所以 ${M("y''=-\\frac{1+(y')^2}{y}=-\\frac{x^2+y^2}{y^3}")}。`],'需 y≠0 才能局部寫成 y=f(x)。','d/dx(y²)=2yy′；二次微分 yy′ 還要再用 product rule。',['implicit_differentiation','higher_derivatives']);
+    return Q('Implicit exponential powers',`x^y=y^x`,`x^y=y^x`,'在 x>0、y>0 下求 dy/dx。',[`取對數：${M('y\\ln x=x\\ln y')}。`,`微分：${M("y'\\ln x+\\frac yx=\\ln y+\\frac{x}{y}y'")}。`,`收集 ${M("y'")} 得 ${M("y'=\\frac{\\ln y-y/x}{\\ln x-x/y}")}。`],'x>0、y>0，且分母不為 0；分母為 0 時需另外分析。','同一方程有兩個 y′ 項，且 xʸ、yˣ 不能用普通 power rule。',['implicit_differentiation','logarithmic_differentiation']);
+  }
+  function paramQ(r,e,k){
+    const v=k%4;
+    if(v===0)return Q('Parametric differentiation',`x=t^2+1,\\quad y=t^3-${e}t`,`x=t^2+1, y=t^3-${e}t`,'求 dy/dx，並找水平切線的參數值。',[`${M('dx/dt=2t')}，${M(`dy/dt=3t^2-${e}`)}。`,`當 ${M('t\\ne0')}，${M(`\\frac{dy}{dx}=\\frac{3t^2-${e}}{2t}`)}。`,`水平切線需 ${M(`3t^2-${e}=0`)} 且 ${M('2t\\ne0')}。`],'斜率公式要求 t≠0。','dy/dx 必須除以 dx/dt；水平切線還要檢查分母。',['parametric_differentiation']);
+    if(v===1)return Q('Second parametric derivative',`x=t+\\sin t,\\quad y=1-\\cos t`,`x=t+sin t, y=1-cos t`,'求 dy/dx 與 d²y/dx²。',[`${M('dx/dt=1+\\cos t')}，${M('dy/dt=\\sin t')}。`,`${M('dy/dx=\\sin t/(1+\\cos t)')}。`,`二階導數為 ${M('\\frac{d^2y}{dx^2}=\\frac{d}{dt}(dy/dx)\\big/\\frac{dx}{dt}=\\frac1{(1+\\cos t)^2}')}。`],'1+cos t≠0；退化參數值須另外分析。','二階參數導數不是 (d²y/dt²)/(d²x/dt²)。',['parametric_differentiation','higher_derivatives']);
+    if(v===2)return Q('Parametric cancellation trap',`x=t^3,\\quad y=t^2`,`x=t^3, y=t^2`,'求 dy/dx，並分析 t=0 是否可直接由化簡後公式判斷切線。',[`當 ${M('t\\ne0')}，${M('dy/dx=(2t)/(3t^2)=2/(3t)')}。`,`在 ${M('t=0')}，${M('dx/dt=dy/dt=0')}，原公式是 0/0，不能因化簡後發散就跳過分析。`,`由 ${M('y^3=x^2')} 可見原點為 cusp，不是普通光滑垂直切線點。`],'所有 t；t=0 為退化點。','約去 t 前必須保留 t=0 這個特殊點。',['parametric_differentiation','differentiability']);
+    return Q('Parametric repeated point',`x=\\cos t,\\quad y=\\sin(2t)`,`x=cos t, y=sin(2t)`,'求斜率，並判斷 t=π/2 與 3π/2 是否為同一幾何點。',[`${M('dy/dx=2\\cos(2t)/(-\\sin t)')}，前提 ${M('\\sin t\\ne0')}。`,`兩參數都給 ${M('(x,y)=(0,0)')}。`,`兩分支斜率分別為 ${M('2')} 與 ${M('-2')}，因此原點是自交點。`],'sin t≠0 才可直接使用斜率公式。','同一幾何點可以由不同參數值到達，而且切線未必相同。',['parametric_differentiation','special_point']);
+  }
+  function higherQ(r,e,k){
+    const v=k===15?1:k%4;
+    if(v===0){const n=e===5?2026:12+e;return Q('Higher derivative — periodicity',`f(x)=\\sin x-\\cos x,\\quad \\text{求 }f^{(${n})}(x)`,`f(x)=sin x-cos x; find f^(${n})(x)`,'利用週期，不可逐次暴力微分。',[`導數每 4 次循環一次；${M(`${n}\\equiv${n%4}\\pmod4`)}。`,`因此依餘數得到 ${M(n%4===0?'f^{('+n+')}(x)=\\sin x-\\cos x':n%4===1?'f^{('+n+')}(x)=\\cos x+\\sin x':n%4===2?'f^{('+n+')}(x)=-\\sin x+\\cos x':'f^{('+n+')}(x)=-\\cos x-\\sin x')}。`],'所有實數。','巨大階數只是模 4 心理攻擊。',['higher_derivatives','trigonometric']);}
+    if(v===1)return Q('Higher derivative — recurrence',`f(x)=x^2e^x,\\quad \\text{求 }f^{(n)}(x)`,`f(x)=x^2 exp(x); find f^(n)(x)`,'由低階導數找規律，不直接引用未教的 Leibniz 公式。',[`前幾階顯示多項式部分依序為 ${M('x^2,\\ x^2+2x,\\ x^2+4x+2')}。`,`每微分一次，若 ${M('f^{(n)}=e^xP_n')}，則 ${M('P_{n+1}=P_n+P_n\'')}。`,`歸納得 ${M('f^{(n)}(x)=e^x[x^2+2nx+n(n-1)]')}。`],'所有實數。','Leibniz 概念由 recurrence 推出，不要求背尚未啟用的公式。',['higher_derivatives','recursion','product']);
+    if(v===2)return Q('Higher derivative at zero',`f(x)=x^{${e}}e^x,\\quad \\text{求 }f^{(${e+2})}(0)`,`f(x)=x^${e} exp(x); find f^(${e+2})(0)`,'只追蹤在 x=0 真正有貢獻的 product-rule 分支。',[`重複 product rule 時，在 ${M('x=0')} 只有「恰好對 ${M(`x^{${e}}`)} 微分 ${M(e)} 次」的分支不為零。`,`從前幾階導數的係數規律可得該分支出現 ${M(`\\binom{${e+2}}{${e}}`)} 次，每次貢獻 ${M(`${e}!`)}。`,`因此 ${M(`f^{(${e+2})}(0)=\\binom{${e+2}}{${e}}${e}!=(${e+2})!/2`)}。`],'所有實數。','只有特定 product-rule 分支有貢獻；不需要 Taylor series，也不必展開全部高階導數。',['higher_derivatives','special_point']);
+    return Q('Parity and derivatives',`f(-x)=f(x),\\quad f\\text{ 在 }0\\text{ 附近充分可微}`,`f is even and sufficiently differentiable near 0`,'判斷所有奇數階導數在 x=0 的值。',[`偶函數微分一次成為奇函數；奇偶性隨每次微分交替。`,`因此所有奇數階導數都是奇函數。`,`故 ${M('f^{(2m+1)}(0)=0')}。`],'需相應階數導數存在。','這是 parity，不是把巨大階數硬算出來。',['higher_derivatives','symmetry']);
+  }
+  function simplifyQ(r,e){return Q('Simplify before differentiating',`f(x)=\\frac{x^{${e+3}}-x^{${e+1}}}{x^{${e+1}}}`,`f(x)=(x^${e+3}-x^${e+1})/x^${e+1}`,'先處理定義域，再化簡微分。',[`原式定義域為 ${M('x\\ne0')}。`,`在此定義域上 ${M('f(x)=x^2-1')}，所以 ${M("f'(x)=2x")}。`],'x≠0；化簡後不可把洞補回去。','可以約掉 x 的冪，但不能刪除原函數在 x=0 的缺口。',['simplification','quotient']);}
+  function structureQ(r,e){return e<4?Q('Symmetry / special point',`f(x)+f(-x)=0`,`f(x)+f(-x)=0`,'若 f 可微，證明 f′ 為偶函數。',[`對 x 微分：${M("f'(x)-f'(-x)=0")}。`,`因此 ${M("f'(x)=f'(-x)")}。`],'f 在相應區間可微。','f(-x) 微分會額外乘 -1。',['symmetry']):Q('Recursion / invariant',`T_1(x)=x,\\quad T_{n+1}(x)=x^{T_n(x)}`,`T_1=x, T_(n+1)=x^(T_n)`,'求 T₂₀₂₆′(1)。',[`所有 ${M('T_n(1)=1')}。`,`對數微分：${M("T_{n+1}'=T_{n+1}[T_n'\\ln x+T_n/x]")}。`,`代入 ${M('x=1')} 得 ${M("T_{n+1}'(1)=1")}，故答案為 ${M('1')}。`],'x>0。','2026 層只是 invariant 心理攻擊。',['recursion','special_point','logarithmic_differentiation']);}
+  function bossQ(r,e,k){
+    if(e===5)return Q('Reviewer 2 — final boss',`x=t e^t,\\quad y=t^2e^t,\\quad \\text{求 }\\left.\\frac{d^2y}{dx^2}\\right|_{t=0}`,`x=t exp(t), y=t^2 exp(t); find d2y/dx2 at t=0`,'不得展开成冗長商式；利用特殊點。',[`${M('dx/dt=e^t(1+t)')}，${M('dy/dt=e^t(t^2+2t)')}。`,`所以 ${M('dy/dx=t(t+2)/(t+1)')}。`,`再用 ${M('d^2y/dx^2=[d/dt(dy/dx)]/(dx/dt)')}；在 ${M('t=0')}，分子導數為 2、分母為 1。`,`答案 ${M('2')}。`],'t=-1 時 dx/dt=0；指定點 t=0 無退化。','結合 product、parametric、higher derivative 與 special-point evaluation，但捷徑只算 t=0。',['parametric_differentiation','higher_derivatives','special_point']);
+    return Q('Boss — evil but fair',`x^2+xy+y^2=${e+4},\\quad \\text{求曲線上 }y'=0\\text{ 的條件}`,`x^2+xy+y^2=${e+4}; find where y'=0`,'先隱微分，再處理水平切線與退化條件。',[`${M("y'=-(2x+y)/(x+2y)")}。`,`水平切線需 ${M('2x+y=0')} 且 ${M('x+2y\\ne0')}。`,`令 ${M('y=-2x')} 代回曲線，得 ${M(`3x^2=${e+4}`)}。`,`因此 ${M(`x=\\pm\\sqrt{(${e+4})/3},\\ y=-2x`)}，且分母為 ${M('-3x\\ne0')}。`],'曲線上且 x+2y≠0。','不能只令分子為零；還要確認分母不為零。',['implicit_differentiation','special_point','differentiability']);
+  }
+  const makers={sum:sumQ,product:productQ,quotient:quotientQ,mixed:mixedQ,log:logDiffQ,implicit:implicitQ,parametric:paramQ,higher:higherQ,simplify:simplifyQ,structure:structureQ,boss:bossQ};
+  const quota=['sum','sum','product','product','quotient','quotient','mixed','mixed','mixed','log','log','implicit','implicit','parametric','parametric','higher','higher','simplify','structure','boss'];
+  function schedule(mode,n){if(mode==='mixed')return quota.slice(0,n);const map={implicit:['implicit','implicit','boss','implicit'],parametric:['parametric','parametric','higher','boss'],higher:['higher','higher','structure','boss'],boss:['boss','structure','implicit','parametric','higher','log']};const a=map[mode]||quota;return Array.from({length:n},(_,i)=>a[i%a.length]);}
+  function generate(){const n=Math.max(1,Math.min(20,+$('#count').value||20)),e=+$('#evil').value,r=rng($('#seed').value),mode=$('#mode').value;current=schedule(mode,n).map((name,i)=>makers[name](r,e,i));render()}
+  function rich(s){return esc(s).replace(/%%(.*?)%%/g,(_,tex)=>`<span class="math-line">\\(${tex}\\)</span>`)}
+  function typeset(){if(window.MathJax?.typesetPromise)MathJax.typesetPromise([$('#sheet')]).catch(()=>{})}
+  function render(){const seed=esc($('#seed').value),evil=$('#evil').value;$('#sheet').innerHTML=`<div class="title"><h2>微分作業：邪惡版</h2><div class="meta">Seed ${seed} ・ 邪惡度 ${evil} ・ ${current.length} 題 ・ 姓名：________________</div></div><div class="instructions"><b>規則：</b>只考微分。必須標示中間變數、定義域、特殊點與所用法則；遇到 0/0 或 implicit function theorem 條件失效時不得硬判斷。</div>`+current.map((q,i)=>`<article class="problem"><div class="qhead"><span class="qnum">第 ${i+1} 題</span><span class="badge">${esc(q.type)}</span></div><div class="prompt">${esc(q.prompt)}</div><div class="expr">\\[${q.tex}\\]</div><button class="btn alt screen-only" onclick="this.nextElementSibling.classList.toggle('show');window.MathJax?.typesetPromise?.([this.nextElementSibling])">查看這一題如何攻擊你</button><div class="solution ${showing?'show':''}"><h4>詳解與攻擊路徑</h4><ol class="steps">${q.steps.map(s=>`<li>${rich(s)}</li>`).join('')}</ol><div class="domain"><b>Domain／條件：</b>${rich(q.domain)}</div><div class="domain"><b>陷阱：</b>${rich(q.trap)}</div></div></article>`).join('')+`<div class="footer">Generated by 微分作業產生器：邪惡版 ・ Evil but fair ・ 題目可以狠，定義不能含糊。</div>`;typeset()}
+  function toggle(){showing=!showing;$('#toggle').textContent=showing?'隱藏全部詳解':'顯示全部詳解';render()}
+  function plain(){return ['微分作業：邪惡版',`Seed: ${$('#seed').value}｜邪惡度: ${$('#evil').value}`,'',...current.flatMap((q,i)=>[`${i+1}. [${q.type}] ${q.plain}`,q.prompt,'詳解:',...q.steps.map((s,j)=>`  ${j+1}) ${s.replaceAll('%%','')}`),`Domain: ${q.domain}`,`Trap: ${q.trap}`,''])].join('\n')}
+  async function copy(){try{await navigator.clipboard.writeText(plain());$('#copy').textContent='已複製';setTimeout(()=>$('#copy').textContent='複製純文字',1200)}catch{alert('瀏覽器不允許自動複製，請用列印功能存成 PDF。')}}
+  $('#generate').addEventListener('click',generate);$('#toggle').addEventListener('click',toggle);$('#copy').addEventListener('click',copy);generate();
+})();
+</script>
+</body>
+</html>
